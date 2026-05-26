@@ -88,8 +88,7 @@ class WifePickerPlugin(MaiBotPlugin):
             self.ctx.logger.warning(f"无法自动获取机器人 QQ: {e}")
         return None
 
-    # ---------------- 发送（绕过 VLM 的关键） ----------------
-    # 通过 napcat 适配器 API 直接发送，不走 MaiBot 主发送链路 → 天然绕过 VLM 识图。
+    # 通过适配器 API 直接发送，不走 MaiBot 主发送链路，绕过 VLM 识图。
 
     async def _send_napcat(self, group_id: int, message_chain: list) -> None:
         try:
@@ -227,7 +226,7 @@ class WifePickerPlugin(MaiBotPlugin):
 
         if not candidates:
             await self._send_text_at(
-                group_id, sender_qq, "群里好像没人了（或者只有你和机器人）..."
+                group_id, sender_qq, "群里好像没人了（或者只有你和我啦）..."
             )
             return True, "no_candidates", True
 
@@ -287,7 +286,7 @@ class WifePickerPlugin(MaiBotPlugin):
         if sender_qq not in no_limit_users:
             if divorce_usage.get(group_id, {}).get(sender_qq) == today:
                 await self._send_text_at(
-                    group_id, sender_qq, "感情不是儿戏，明天再来吧。（每日仅限一次离婚）"
+                    group_id, sender_qq, "每日仅限一次离婚哦，明天再来吧~"
                 )
                 return True, "limit_reached", True
 
