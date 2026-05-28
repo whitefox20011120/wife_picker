@@ -4,11 +4,9 @@ from typing import ClassVar, List
 
 from maibot_sdk import Field, PluginConfigBase
 
-
 class PluginSection(PluginConfigBase):
     __ui_label__: ClassVar[str] = "插件开关"
     __ui_order__: ClassVar[int] = 0
-
     enabled: bool = Field(
         default=True,
         description="是否启用本插件。",
@@ -19,11 +17,9 @@ class PluginSection(PluginConfigBase):
         json_schema_extra={"disabled": True, "hidden": True, "label": "配置版本", "order": 99},
     )
 
-
 class WifePickerSection(PluginConfigBase):
     __ui_label__: ClassVar[str] = "今日老婆设置"
     __ui_order__: ClassVar[int] = 1
-
     exclude_self: bool = Field(
         default=True,
         description="是否将机器人自身排除出候选池。",
@@ -69,7 +65,6 @@ class WifePickerSection(PluginConfigBase):
         description="是否启用本地持久化（保存今日抽取与离婚记录）。",
         json_schema_extra={"label": "启用持久化", "order": 8},
     )
-
 
 class WifePickerConfig(PluginConfigBase):
     plugin: PluginSection = Field(default_factory=PluginSection)
