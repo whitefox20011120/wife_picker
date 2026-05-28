@@ -11,12 +11,10 @@ from maibot_sdk import MaiBotPlugin, Command, CONFIG_RELOAD_SCOPE_SELF
 from .config import WifePickerConfig
 from .utils import PersistStore, fetch_avatar_base64, today_str, format_user_display
 
-
 class WifePickerPlugin(MaiBotPlugin):
     config_model = WifePickerConfig
 
-    # ---------------- 生命周期 ----------------
-
+    # 生命周期
     async def on_load(self) -> None:
         data_dir = os.path.join(os.path.dirname(__file__), "data")
         os.makedirs(data_dir, exist_ok=True)
@@ -36,8 +34,7 @@ class WifePickerPlugin(MaiBotPlugin):
             # 配置 bot_qq 改了，清缓存让下次重新解析
             self._bot_qq_cache = None
 
-    # ---------------- 上下文解析 ----------------
-
+    # 上下文解析
     def _extract_ctx(self, kwargs: dict):
         """从命令回调 kwargs 中提取 group_id / sender_qq / sender_name。"""
         base_info = kwargs.get("message_base_info", {}) or {}
@@ -47,7 +44,7 @@ class WifePickerPlugin(MaiBotPlugin):
         group_id = kwargs.get("group_id") or group_info.get("group_id")
         sender_qq = kwargs.get("user_id") or user_info.get("user_id")
 
-        # raw_event 兜底（部分适配器经此路径透传）
+        # raw_event 兜底
         if not group_id and "raw_event" in kwargs:
             raw_event = kwargs["raw_event"]
             if isinstance(raw_event, dict):
@@ -88,8 +85,7 @@ class WifePickerPlugin(MaiBotPlugin):
             self.ctx.logger.warning(f"无法自动获取机器人 QQ: {e}")
         return None
 
-    # 通过适配器 API 直接发送，不走 MaiBot 主发送链路，绕过 VLM 识图。
-
+    # 通过适配器 API 直接发送，绕过 VLM 识图
     async def _send_napcat(self, group_id: int, message_chain: list) -> None:
         try:
             await self.ctx.api.call(
@@ -138,8 +134,7 @@ class WifePickerPlugin(MaiBotPlugin):
 
         await self._send_napcat(int(group_id), chain)
 
-    # ---------------- 冷却 ----------------
-
+    # 冷却
     def _check_cooldown(self, group_id: str, sender_qq: str, command: str) -> bool:
         """True = 命中冷却，应当拦截。"""
         key = f"{group_id}_{sender_qq}"
@@ -151,8 +146,7 @@ class WifePickerPlugin(MaiBotPlugin):
         self._last_action[key] = {"command": command, "time": now}
         return False
 
-    # ---------------- /今日老婆 ----------------
-
+    # /今日老婆
     @Command(
         "wife_picker",
         description="随机抽取今日老婆",
@@ -251,8 +245,7 @@ class WifePickerPlugin(MaiBotPlugin):
 
         return True, f"wife picked: {wife_card or wife_nick}", True
 
-    # ---------------- /离婚 ----------------
-
+    # /离婚
     @Command(
         "wife_picker_divorce",
         description="清空今日老婆记录，可重新抽取（每日限一次）",
