@@ -38,6 +38,7 @@
     ]
   },
   "id": "whitefox.wife-picker",
+  "plugin_type": "entertainment",
   "display": {
     "icon": {
       "type": "local",
