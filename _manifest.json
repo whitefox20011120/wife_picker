@@ -4,7 +4,7 @@
   "name": "今日老婆",
   "description": "随机抽取今日老婆",
   "author": {
-    "name": "白狐",
+    "name": "whitefox",
     "url": "https://github.com/whitefox20011120"
   },
   "license": "MIT",
@@ -37,5 +37,13 @@
       "zh-CN"
     ]
   },
-  "id": "whitefox.wife-picker"
+  "id": "whitefox.wife-picker",
+  "display": {
+    "icon": {
+      "type": "local",
+      "value": "assets/wife.png",
+      "fallback": "image",
+      "background": "#ffffff"
+    }
+  }
 }
