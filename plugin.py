@@ -9,12 +9,14 @@ from typing import Optional
 from maibot_sdk import MaiBotPlugin, Command, CONFIG_RELOAD_SCOPE_SELF
 
 from .config import WifePickerConfig
-from .utils import PersistStore, fetch_avatar_base64, today_str, format_user_display
+from .utils import PersistStore, fetch_avatar_base64, today_str
+
 
 class WifePickerPlugin(MaiBotPlugin):
     config_model = WifePickerConfig
 
-    # 生命周期
+    # ---------------- 生命周期 ----------------
+
     async def on_load(self) -> None:
         data_dir = os.path.join(os.path.dirname(__file__), "data")
         os.makedirs(data_dir, exist_ok=True)
@@ -34,7 +36,8 @@ class WifePickerPlugin(MaiBotPlugin):
             # 配置 bot_qq 改了，清缓存让下次重新解析
             self._bot_qq_cache = None
 
-    # 上下文解析
+    # ---------------- 上下文解析 ----------------
+
     def _extract_ctx(self, kwargs: dict):
         """从命令回调 kwargs 中提取 group_id / sender_qq / sender_name。"""
         base_info = kwargs.get("message_base_info", {}) or {}
@@ -44,7 +47,7 @@ class WifePickerPlugin(MaiBotPlugin):
         group_id = kwargs.get("group_id") or group_info.get("group_id")
         sender_qq = kwargs.get("user_id") or user_info.get("user_id")
 
-        # raw_event 兜底
+        # raw_event 兜底（部分适配器经此路径透传）
         if not group_id and "raw_event" in kwargs:
             raw_event = kwargs["raw_event"]
             if isinstance(raw_event, dict):
@@ -85,7 +88,8 @@ class WifePickerPlugin(MaiBotPlugin):
             self.ctx.logger.warning(f"无法自动获取机器人 QQ: {e}")
         return None
 
-    # 通过适配器 API 直接发送，绕过 VLM 识图
+    # 通过 napcat 适配器 API 直接发送图片
+
     async def _send_napcat(self, group_id: int, message_chain: list) -> None:
         try:
             await self.ctx.api.call(
@@ -116,13 +120,16 @@ class WifePickerPlugin(MaiBotPlugin):
         wife_card: str,
         prefix: str,
     ) -> None:
-        display = format_user_display(wife_uid, wife_nick, wife_card)
-        text = f"{prefix}【{display}】～❤"
+        nick = wife_nick or "未知昵称"
+        lines = [f"\n💕 {prefix}：", f"🌸 QQ名：{nick}"]
+        if wife_card and wife_card != wife_nick:
+            lines.append(f"🏷️ 群昵称：{wife_card}")
+        lines.append(f"🆔 QQ号：{wife_uid}")
+        text = "\n".join(lines)
 
         chain: list = []
         if sender_qq and sender_qq.isdigit():
             chain.append({"type": "at", "data": {"qq": str(sender_qq)}})
-            chain.append({"type": "text", "data": {"text": " "}})
         chain.append({"type": "text", "data": {"text": text}})
 
         if self.config.wife_picker.send_avatar:
@@ -134,7 +141,8 @@ class WifePickerPlugin(MaiBotPlugin):
 
         await self._send_napcat(int(group_id), chain)
 
-    # 冷却
+    # ---------------- 冷却 ----------------
+
     def _check_cooldown(self, group_id: str, sender_qq: str, command: str) -> bool:
         """True = 命中冷却，应当拦截。"""
         key = f"{group_id}_{sender_qq}"
@@ -146,7 +154,8 @@ class WifePickerPlugin(MaiBotPlugin):
         self._last_action[key] = {"command": command, "time": now}
         return False
 
-    # /今日老婆
+    # ---------------- /今日老婆 ----------------
+
     @Command(
         "wife_picker",
         description="随机抽取今日老婆",
@@ -220,7 +229,7 @@ class WifePickerPlugin(MaiBotPlugin):
 
         if not candidates:
             await self._send_text_at(
-                group_id, sender_qq, "群里好像没人了（或者只有你和我啦）..."
+                group_id, sender_qq, "群里好像没人了（或者只有你和机器人）..."
             )
             return True, "no_candidates", True
 
@@ -245,7 +254,8 @@ class WifePickerPlugin(MaiBotPlugin):
 
         return True, f"wife picked: {wife_card or wife_nick}", True
 
-    # /离婚
+    # ---------------- /离婚 ----------------
+
     @Command(
         "wife_picker_divorce",
         description="清空今日老婆记录，可重新抽取（每日限一次）",
@@ -279,7 +289,7 @@ class WifePickerPlugin(MaiBotPlugin):
         if sender_qq not in no_limit_users:
             if divorce_usage.get(group_id, {}).get(sender_qq) == today:
                 await self._send_text_at(
-                    group_id, sender_qq, "每日仅限一次离婚哦，明天再来吧~"
+                    group_id, sender_qq, "感情不是儿戏，明天再来吧。（每日仅限一次离婚）"
                 )
                 return True, "limit_reached", True
 

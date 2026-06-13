@@ -13,6 +13,7 @@ import aiohttp
 
 logger = logging.getLogger("wife_picker")
 
+
 async def fetch_avatar_base64(qq: str, size: int = 640, timeout_sec: int = 10) -> Optional[str]:
     """下载指定 QQ 的头像并返回 base64。失败返回 None。"""
     urls = [
@@ -35,17 +36,13 @@ async def fetch_avatar_base64(qq: str, size: int = 640, timeout_sec: int = 10) -
         logger.warning(f"头像下载会话错误: {e}")
     return None
 
+
 def today_str(tz_offset_hours: int = 8) -> str:
     """根据时区偏移返回 YYYY-MM-DD。"""
     offset = max(-12, min(14, int(tz_offset_hours)))
     ts = time.time() + offset * 3600
     return time.strftime("%Y-%m-%d", time.gmtime(ts))
 
-def format_user_display(uid: str, nick: str, card: str) -> str:
-    nick = nick or "未知昵称"
-    if card and card != nick:
-        return f"{nick}{{{card}}}({uid})"
-    return f"{nick}({uid})"
 
 class PersistStore:
     """持久化今日抽取记录与离婚使用次数。"""
